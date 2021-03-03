@@ -22,13 +22,13 @@ struct Token<'a> {
 extern crate lazy_static;
 lazy_static! {
     static ref HASHMAP: HashMap<&'static str, i32> = {
-        let mut m = HashMap::new();
-        m.insert("^", 4);
-        m.insert("*", 3);
-        m.insert("/", 3);
-        m.insert("+", 2);
-        m.insert("-", 2);
-        m
+        let mut precedence = HashMap::new();
+        precedence.insert("^", 4);
+        precedence.insert("*", 3);
+        precedence.insert("/", 3);
+        precedence.insert("+", 2);
+        precedence.insert("-", 2);
+        precedence
     };
 }
 
@@ -67,31 +67,19 @@ impl Token<'_> {
     }
 
     fn is_operator(&self) -> bool {
-        match self.tokentype {
-            TokenType::Operator(_) => true,
-            _ => false,
-        }
+        matches!(self.tokentype, TokenType::Operator(_))
     }
 
     fn is_number(&self) -> bool {
-        match self.tokentype {
-            TokenType::Number(_) => true,
-            _ => false,
-        }
+        matches!(self.tokentype, TokenType::Number(_))
     }
 
     fn is_left_parenthesis(&self) -> bool {
-        match self.tokentype {
-            TokenType::LeftParenthesis => true,
-            _ => false,
-        }
+        matches!(self.tokentype, TokenType::LeftParenthesis)
     }
 
     fn is_right_parenthesis(&self) -> bool {
-        match self.tokentype {
-            TokenType::RightParenthesis => true,
-            _ => false,
-        }
+        matches!(self.tokentype, TokenType::RightParenthesis)
     }
 
     // checks for precedence of operators
