@@ -5,10 +5,12 @@
 use std::collections::HashMap;
 use std::fmt;
 
+#[allow(dead_code)]
 #[derive(Debug)]
 enum TokenType<'a> {
     Number(i32),
     Operator(&'a str),
+    Function(String),
     LeftParenthesis,
     RightParenthesis,
 }
@@ -32,14 +34,30 @@ struct Token<'a> {
 //     };
 // }
 
+fn list_of_fn_names(name: &str) -> bool {
+    let functions = [
+        "sin", "cos", "tan", "cosec", "sec", "cot",
+        "min", "max", "mod", "pow", "log", "sq", "sqrt", "hypot",
+        "degrees", "radians"
+    ];
+    functions.contains(&name)
+}
+
 impl Token<'_> {
-    fn new(token_type: &str) -> Self {
-        let token = token_type.parse::<i32>();
+    fn new(token_value: &str) -> Self {
+        if list_of_fn_names(&token_value) {
+            return Self {
+                tokentype: TokenType::Function(token_value.to_string()),
+            };
+        }
+
+        let token = token_value.parse::<i32>();
+
         match token {
             Ok(value) => Self {
                 tokentype: TokenType::Number(value),
             },
-            _ => match token_type {
+            _ => match token_value {
                 "(" => Self {
                     tokentype: TokenType::LeftParenthesis,
                 },
@@ -66,12 +84,25 @@ impl Token<'_> {
         }
     }
 
-    fn is_operator(&self) -> bool {
-        matches!(self.tokentype, TokenType::Operator(_))
-    }
-
     fn is_number(&self) -> bool {
         matches!(self.tokentype, TokenType::Number(_))
+    }
+
+    fn is_function(&self) -> bool {
+        matches!(self.tokentype, TokenType::Function(_))
+    }
+
+    // #[allow(dead_code)]
+    // fn list_of_fn_names(name: &str) -> bool {
+    //     let functions = ["sin", "cos", "tan", "cosec", "sec", "cot",
+    //      "min", "max", "mod", "pow", "log", "sq", "sqrt", "hypot",
+    //      "degrees", "radians"];
+    //     functions.contains(&name)
+
+    // }
+
+    fn is_operator(&self) -> bool {
+        matches!(self.tokentype, TokenType::Operator(_))
     }
 
     fn is_left_parenthesis(&self) -> bool {
@@ -106,6 +137,9 @@ impl Token<'_> {
 
         return precedence.get::<str>(&self_token_value) >= precedence.get::<str>(&other_token_value)
             && &self_token_value != other_token_value;
+
+        // return HASHMAP.get::<str>(&self_token_value) >= HASHMAP.get::<str>(&other_token_value)
+        //     && &self_token_value != other_token_value;
     }
 
     // extracts operator-value from the token
@@ -134,6 +168,7 @@ fn str_to_token<'a>(infix: &'a [&str]) -> Vec<Token<'a>> {
     token_list
 }
 
+
 /// Turns `&[&str]` of infix notation, into a postfix notation.
 ///
 /// Does not perform the actual evaluation expression, but can be used to change an expression from
@@ -156,6 +191,8 @@ pub fn infix_to_postfix<'a>(infix_list: &'a [&str]) -> Vec<&'a str> {
     for token in token_list {
         if token.is_number() {
             token_stack.push(token);
+        } else if token.is_function() {
+            operator_stack.push(token);
         } else if token.is_operator() {
             while !operator_stack.is_empty()
                 && operator_stack
@@ -189,15 +226,6 @@ pub fn infix_to_postfix<'a>(infix_list: &'a [&str]) -> Vec<&'a str> {
     for item in token_stack {
         let mut index = 0;
         match item.tokentype {
-            TokenType::Operator(val) => {
-                for element in infix_list {
-                    if *element == val {
-                        output.push(infix_list[index]);
-                        break;
-                    }
-                    index += 1;
-                }
-            }
             TokenType::Number(num) => {
                 for element in infix_list {
                     if *element == num.to_string() {
@@ -206,7 +234,25 @@ pub fn infix_to_postfix<'a>(infix_list: &'a [&str]) -> Vec<&'a str> {
                     }
                     index += 1;
                 }
+            },
+            TokenType::Function(func) => {
+                for element in infix_list {
+                    if *element == func {
+                        output.push(infix_list[index]);
+                        break;
+                    }
+                    index += 1;
+                }
             }
+            TokenType::Operator(val) => {
+                for element in infix_list {
+                    if *element == val {
+                        output.push(infix_list[index]);
+                        break;
+                    }
+                    index += 1;
+                }
+            },
             _ => panic!("Only numbers and operators can be the value at this point"),
         };
     }
@@ -235,6 +281,13 @@ mod tests {
             infix_to_postfix(&["1", "*", "(", "7", "-", "2", "+", "(", "1", "+", "1", ")", ")"]),
             &["1", "7", "2", "-", "1", "1", "+", "+", "*"]
         );
+    }
+
+    #[test]
+    fn function_work() {
+        assert_eq!(
+            infix_to_postfix(&["sin","(","2",")"]), &["2","sin"]
+            );
     }
 
     // #[bench]
