@@ -1,6 +1,6 @@
-#![feature(test)]
+// #![feature(test)]
 
-extern crate test;
+// extern crate test;
 
 use std::collections::HashMap;
 use std::fmt;
@@ -17,20 +17,20 @@ struct Token<'a> {
     tokentype: TokenType<'a>,
 }
 
-//use std::collections::HashMap;
-#[macro_use]
-extern crate lazy_static;
-lazy_static! {
-    static ref HASHMAP: HashMap<&'static str, i32> = {
-        let mut precedence = HashMap::new();
-        precedence.insert("^", 4);
-        precedence.insert("*", 3);
-        precedence.insert("/", 3);
-        precedence.insert("+", 2);
-        precedence.insert("-", 2);
-        precedence
-    };
-}
+// // use std::collections::HashMap;
+// #[macro_use]
+// extern crate lazy_static;
+// lazy_static! {
+//     static ref HASHMAP: HashMap<&'static str, i32> = {
+//         let mut precedence = HashMap::new();
+//         precedence.insert("^", 4);
+//         precedence.insert("*", 3);
+//         precedence.insert("/", 3);
+//         precedence.insert("+", 2);
+//         precedence.insert("-", 2);
+//         precedence
+//     };
+// }
 
 impl Token<'_> {
     fn new(token_type: &str) -> Self {
@@ -84,6 +84,15 @@ impl Token<'_> {
 
     // checks for precedence of operators
     fn has_greater_precedence_than(&self, other: &Token) -> bool {
+
+    	let mut precedence = HashMap::new();
+        precedence.insert("^", 4);
+        precedence.insert("*", 3);
+        precedence.insert("/", 3);
+        precedence.insert("+", 2);
+        precedence.insert("-", 2);
+
+
         let self_token_value = match &self.tokentype {
             TokenType::Operator(val) => val,
             TokenType::LeftParenthesis => "(",
@@ -95,7 +104,7 @@ impl Token<'_> {
             _ => panic!("Should be called only on operator-stack"),
         };
 
-        return HASHMAP.get::<str>(&self_token_value) >= HASHMAP.get::<str>(&other_token_value)
+        return precedence.get::<str>(&self_token_value) >= precedence.get::<str>(&other_token_value)
             && &self_token_value != other_token_value;
     }
 
@@ -207,7 +216,7 @@ pub fn infix_to_postfix<'a>(infix_list: &'a [&str]) -> Vec<&'a str> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use test::Bencher;
+    // use test::Bencher;
 
     #[test]
     fn basics_work() {
@@ -228,17 +237,17 @@ mod tests {
         );
     }
 
-    #[bench]
-    fn test_long(b: &mut Bencher) {
-        b.iter(|| {
-            infix_to_postfix(&[
-                "3", "+", "4", "*", "2", "/", "(", "1", "-", "5", ")", "^", "2", "^", "3",
-            ])
-        });
-    }
+    // #[bench]
+    // fn test_long(b: &mut Bencher) {
+    //     b.iter(|| {
+    //         infix_to_postfix(&[
+    //             "3", "+", "4", "*", "2", "/", "(", "1", "-", "5", ")", "^", "2", "^", "3",
+    //         ])
+    //     });
+    // }
 
-    #[bench]
-    fn test_short(b: &mut Bencher) {
-        b.iter(|| infix_to_postfix(&["1", "+", "1"]));
-    }
+    // #[bench]
+    // fn test_short(b: &mut Bencher) {
+    //     b.iter(|| infix_to_postfix(&["1", "+", "1"]));
+    // }
 }

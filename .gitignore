@@ -1,3 +1,4 @@
 /target/*
 /release/*
-/.gitignore/*
+/.gitignore
+/src/main.rs
